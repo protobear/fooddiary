@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA related meta tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#317EFB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Food Diary">
+
+  <title>Food Diary</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Fast Food</h1>
+
+<div class="entry-form" id="entry-form">
+  <div class="form-group">
+    <label for="food-description">What did you eat?</label>
+    <textarea id="food-description" placeholder="Describe what you ate..."></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="meal-type">Meal Type</label>
+    <select id="meal-type">
+      <option value="breakfast">Breakfast</option>
+      <option value="lunch">Lunch</option>
+      <option value="dinner">Dinner</option>
+      <option value="snack">Snack</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="food-time">When did you eat it?</label>
+    <input type="datetime-local" id="food-time">
+  </div>
+
+  <div class="form-group">
+    <label for="food-photo">Photo (optional)</label>
+    <div class="file-upload" style="position: relative;">
+      <div class="file-upload-btn">Choose Photo</div>
+      <input type="file" id="food-photo" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+    </div>
+    <div class="photo-preview" id="photo-preview">
+      <span>No photo selected</span>
+    </div>
+  </div>
+
+  <div class="action-buttons">
+    <button id="add-entry">Add to Diary</button>
+  </div>
+
+  <div class="edit-mode-buttons" id="edit-mode-buttons" style="display: none;">
+    <button id="cancel-edit" class="cancel-btn">Cancel</button>
+    <button id="delete-entry" class="delete-btn">Delete</button>
+  </div>
+</div>
+
+<div class="entries" id="entries">
+  <div class="empty-message" id="empty-message">No entries yet. Start adding your meals!</div>
+  <div id="entries-container"></div>
+</div>
+
+<div class="actions">
+  <button id="export-data">Export Diary</button>
+  <button id="clear-data" class="delete-btn">Clear All</button>
+</div>
+
+<!-- Modal for enlarged images -->
+<div id="image-modal" class="modal">
+  <span class="modal-close" id="modal-close">&times;</span>
+  <img class="modal-content" id="enlarged-image">
+</div>
+
+<!-- Register service worker -->
+<script src="main.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((reg) => console.log('Service worker registered.', reg))
+        .catch((err) => console.error('Service worker not registered.', err));
+    });
+  }
+</script>
+</body>
+</html>
