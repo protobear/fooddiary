@@ -233,9 +233,10 @@ function createEntryElement(entry, index) {
     photoElement.className = 'entry-photo';
     photoElement.src = entry.photo;
     photoElement.alt = 'Food photo';
+    // Add the click event directly to the photo element
     photoElement.addEventListener('click', function() {
+      showModal(imageModal);
       enlargedImage.src = entry.photo;
-      imageModal.style.display = 'flex';
     });
 
     photoContainer.appendChild(photoElement);
@@ -474,7 +475,7 @@ importFile.addEventListener('change', function(event) {
       importedEntries = jsonData.entries;
 
       // Show the import modal
-      importModal.style.display = 'flex';
+      showModal(importModal);
     } catch (error) {
       alert('Error reading file: ' + error.message);
       importFile.value = '';
@@ -515,7 +516,7 @@ mergeEntriesBtn.addEventListener('click', function() {
 
   // Clean up
   importedEntries = null;
-  importModal.style.display = 'none';
+  hideModal(importModal);
   importFile.value = '';
 });
 
@@ -536,7 +537,7 @@ replaceEntriesBtn.addEventListener('click', function() {
 
     // Clean up
     importedEntries = null;
-    importModal.style.display = 'none';
+    hideModal(importModal);
     importFile.value = '';
   }
 });
@@ -544,14 +545,14 @@ replaceEntriesBtn.addEventListener('click', function() {
 // Cancel import button handler
 cancelImportBtn.addEventListener('click', function() {
   importedEntries = null;
-  importModal.style.display = 'none';
+  hideModal(importModal);
   importFile.value = '';
 });
 
 // Import modal close handler
 importModalClose.addEventListener('click', function() {
   importedEntries = null;
-  importModal.style.display = 'none';
+  hideModal(importModal);
   importFile.value = '';
 });
 
@@ -565,24 +566,30 @@ clearBtn.addEventListener('click', function() {
   }
 });
 
+// Modal utilities
+function showModal(modal) {
+  modal.style.display = 'flex';
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10);
+}
+
+function hideModal(modal) {
+  modal.classList.remove('show');
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 300);
+}
+
 // Close modal when clicking the X
 modalClose.addEventListener('click', function() {
-  imageModal.style.display = 'none';
+  hideModal(imageModal);
 });
 
 // Close modal when clicking outside the image
 imageModal.addEventListener('click', function(event) {
   if (event.target === imageModal) {
-    imageModal.style.display = 'none';
-  }
-});
-
-// Close import modal when clicking outside the content
-importModal.addEventListener('click', function(event) {
-  if (event.target === importModal) {
-    importedEntries = null;
-    importModal.style.display = 'none';
-    importFile.value = '';
+    hideModal(imageModal);
   }
 });
 
@@ -604,6 +611,51 @@ function initApp() {
 
   // Load entries from database
   loadEntries();
+
+  // Add our new UI enhancements
+  enhanceUIAnimations();
+}
+
+function enhanceUIAnimations() {
+  // Add tab animations
+  tabItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const tabId = item.getAttribute('data-tab');
+
+      // Hide all content first
+      tabContents.forEach(content => {
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(10px)';
+      });
+
+      // Then show the selected tab with delay
+      setTimeout(() => {
+        setActiveTab(tabId);
+        const activeContent = document.getElementById(tabId);
+        if (activeContent) {
+          activeContent.style.opacity = '1';
+          activeContent.style.transform = 'translateY(0)';
+        }
+      }, 100);
+    });
+  });
+
+  // Enhanced entry rendering with animation
+  const oldCreateEntryElement = window.createEntryElement || createEntryElement;
+  window.createEntryElement = function(entry, index) {
+    const entryElement = oldCreateEntryElement(entry, index);
+
+    // Add a small delay for staggered animation
+    entryElement.style.opacity = '0';
+    entryElement.style.animation = 'none';
+
+    setTimeout(() => {
+      entryElement.style.opacity = '1';
+      entryElement.style.animation = `fadeIn 0.4s ease forwards`;
+    }, index * 50);
+
+    return entryElement;
+  };
 }
 
 // Start the app when DOM is loaded
