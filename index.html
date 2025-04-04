@@ -13,60 +13,98 @@
 
   <title>Food Diary</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Font Awesome icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 <h1>Fast Food</h1>
 
-<div class="entry-form" id="entry-form">
-  <div class="form-group">
-    <label for="food-description">What did you eat?</label>
-    <textarea id="food-description" placeholder="Describe what you ate..."></textarea>
-  </div>
+<div class="app-container">
+  <!-- Add Entry Tab Content -->
+  <div class="tab-content" id="add-tab">
+    <div class="entry-form" id="entry-form">
+      <div class="form-group">
+        <label for="food-description">What did you eat?</label>
+        <textarea id="food-description" placeholder="Describe what you ate..."></textarea>
+      </div>
 
-  <div class="form-group">
-    <label for="meal-type">Meal Type</label>
-    <select id="meal-type">
-      <option value="breakfast">Breakfast</option>
-      <option value="lunch">Lunch</option>
-      <option value="dinner">Dinner</option>
-      <option value="snack">Snack</option>
-    </select>
-  </div>
+      <div class="form-group">
+        <label for="meal-type">Meal Type</label>
+        <select id="meal-type">
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="dinner">Dinner</option>
+          <option value="snack">Snack</option>
+        </select>
+      </div>
 
-  <div class="form-group">
-    <label for="food-time">When did you eat it?</label>
-    <input type="datetime-local" id="food-time">
-  </div>
+      <div class="form-group">
+        <label for="food-time">When did you eat it?</label>
+        <input type="datetime-local" id="food-time">
+      </div>
 
-  <div class="form-group">
-    <label for="food-photo">Photo (optional)</label>
-    <div class="file-upload" style="position: relative;">
-      <div class="file-upload-btn">Choose Photo</div>
-      <input type="file" id="food-photo" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+      <div class="form-group">
+        <label for="food-photo">Photo (optional)</label>
+        <div class="file-upload" style="position: relative;">
+          <div class="file-upload-btn">Choose Photo</div>
+          <input type="file" id="food-photo" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+        </div>
+        <div class="photo-preview" id="photo-preview">
+          <span>No photo selected</span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="add-entry">Add to Diary</button>
+      </div>
+
+      <div class="edit-mode-buttons" id="edit-mode-buttons" style="display: none;">
+        <button id="cancel-edit" class="cancel-btn">Cancel</button>
+        <button id="delete-entry" class="delete-btn">Delete</button>
+      </div>
     </div>
-    <div class="photo-preview" id="photo-preview">
-      <span>No photo selected</span>
+  </div>
+
+  <!-- Log Tab Content -->
+  <div class="tab-content" id="log-tab">
+    <div class="entries" id="entries">
+      <div class="empty-message" id="empty-message">No entries yet. Start adding your meals!</div>
+      <div id="entries-container"></div>
     </div>
   </div>
 
-  <div class="action-buttons">
-    <button id="add-entry">Add to Diary</button>
+  <!-- Settings Tab Content -->
+  <div class="tab-content" id="settings-tab">
+    <div class="settings-container">
+      <h2>Settings</h2>
+      <div class="settings-actions">
+        <button id="export-data">Export Diary</button>
+        <div class="import-container">
+          <div class="file-upload" style="position: relative; width: 100%;">
+            <button class="import-btn" id="import-btn">Import Diary</button>
+            <input type="file" id="import-file" accept=".json" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+          </div>
+        </div>
+        <button id="clear-data" class="delete-btn">Clear All Data</button>
+      </div>
+    </div>
   </div>
 
-  <div class="edit-mode-buttons" id="edit-mode-buttons" style="display: none;">
-    <button id="cancel-edit" class="cancel-btn">Cancel</button>
-    <button id="delete-entry" class="delete-btn">Delete</button>
+  <!-- Tab Bar Navigation -->
+  <div class="tab-bar">
+    <div class="tab-item" data-tab="add-tab">
+      <i class="fas fa-plus"></i>
+      <span>Add</span>
+    </div>
+    <div class="tab-item" data-tab="log-tab">
+      <i class="fas fa-book"></i>
+      <span>Log</span>
+    </div>
+    <div class="tab-item" data-tab="settings-tab">
+      <i class="fas fa-cog"></i>
+      <span>Settings</span>
+    </div>
   </div>
-</div>
-
-<div class="entries" id="entries">
-  <div class="empty-message" id="empty-message">No entries yet. Start adding your meals!</div>
-  <div id="entries-container"></div>
-</div>
-
-<div class="actions">
-  <button id="export-data">Export Diary</button>
-  <button id="clear-data" class="delete-btn">Clear All</button>
 </div>
 
 <!-- Modal for enlarged images -->
@@ -75,14 +113,28 @@
   <img class="modal-content" id="enlarged-image">
 </div>
 
+<!-- Import Modal -->
+<div id="import-modal" class="modal">
+  <div class="import-modal-content">
+    <span class="modal-close" id="import-modal-close">&times;</span>
+    <h2>Import Options</h2>
+    <p>How would you like to import entries?</p>
+    <div class="import-options">
+      <button id="merge-entries">Merge with existing entries</button>
+      <button id="replace-entries" class="delete-btn">Replace all existing entries</button>
+      <button id="cancel-import" class="cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Register service worker -->
 <script src="main.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
-        .then((reg) => console.log('Service worker registered.', reg))
-        .catch((err) => console.error('Service worker not registered.', err));
+              .then((reg) => console.log('Service worker registered.', reg))
+              .catch((err) => console.error('Service worker not registered.', err));
     });
   }
 </script>

@@ -1,6 +1,7 @@
 // Initialize variables
 let foodEntries = [];
 let editingIndex = -1;
+let importedEntries = null;
 const foodDescription = document.getElementById('food-description');
 const mealType = document.getElementById('meal-type');
 const foodTime = document.getElementById('food-time');
@@ -18,6 +19,18 @@ const entryForm = document.getElementById('entry-form');
 const editModeButtons = document.getElementById('edit-mode-buttons');
 const cancelEditBtn = document.getElementById('cancel-edit');
 const deleteEntryBtn = document.getElementById('delete-entry');
+
+// Import related elements
+const importFile = document.getElementById('import-file');
+const importModal = document.getElementById('import-modal');
+const importModalClose = document.getElementById('import-modal-close');
+const mergeEntriesBtn = document.getElementById('merge-entries');
+const replaceEntriesBtn = document.getElementById('replace-entries');
+const cancelImportBtn = document.getElementById('cancel-import');
+
+// Tab navigation elements
+const tabItems = document.querySelectorAll('.tab-item');
+const tabContents = document.querySelectorAll('.tab-content');
 
 // Set default datetime to now
 const now = new Date();
@@ -43,6 +56,53 @@ request.onupgradeneeded = (event) => {
     db.createObjectStore('entries', { autoIncrement: true });
   }
 };
+
+// Tab Navigation
+function initTabs() {
+  // Set default active tab (Add tab)
+  setActiveTab('add-tab');
+
+  // Add click event listeners to tab items
+  tabItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const tabId = item.getAttribute('data-tab');
+      setActiveTab(tabId);
+    });
+  });
+}
+
+function setActiveTab(tabId) {
+  // Update active tab item
+  tabItems.forEach(item => {
+    if (item.getAttribute('data-tab') === tabId) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // Update active tab content
+  tabContents.forEach(content => {
+    if (content.id === tabId) {
+      content.classList.add('active');
+    } else {
+      content.classList.remove('active');
+    }
+  });
+}
+
+// Format date for grouping
+function formatDateForGrouping(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// Get day start timestamp
+function getDayStart(dateString) {
+  const date = new Date(dateString);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
 
 // Load entries from IndexedDB
 function loadEntries() {
@@ -87,66 +147,115 @@ function renderEntries() {
   emptyMessage.style.display = 'none';
 
   // Sort entries by time
-  foodEntries.sort((a, b) => new Date(a.time) - new Date(b.time));
+  foodEntries.sort((a, b) => new Date(b.time) - new Date(a.time));
 
-  foodEntries.forEach((entry, index) => {
-    const entryElement = document.createElement('div');
-    entryElement.className = `entry ${entry.mealType || 'breakfast'}`;
-    entryElement.dataset.index = index;
+  // Group entries by date
+  const groupedEntries = {};
 
-    const timeElement = document.createElement('div');
-    timeElement.className = 'entry-time';
-    const entryDate = new Date(entry.time);
+  foodEntries.forEach((entry) => {
+    const dateKey = formatDateForGrouping(entry.time);
+    const dayTimestamp = getDayStart(entry.time);
 
-    const timeText = document.createElement('span');
-    timeText.textContent = entryDate.toLocaleString();
-
-    const mealTypeSpan = document.createElement('span');
-    mealTypeSpan.className = 'meal-type';
-    const mealTypeName = entry.mealType ? entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1) : 'Meal';
-    mealTypeSpan.textContent = mealTypeName;
-
-    timeElement.appendChild(timeText);
-    timeElement.appendChild(mealTypeSpan);
-
-    const contentElement = document.createElement('div');
-    contentElement.className = 'entry-content';
-    contentElement.textContent = entry.description;
-
-    entryElement.appendChild(timeElement);
-    entryElement.appendChild(contentElement);
-
-    if (entry.photo) {
-      const photoContainer = document.createElement('div');
-      photoContainer.className = 'photo-container';
-
-      const photoElement = document.createElement('img');
-      photoElement.className = 'entry-photo';
-      photoElement.src = entry.photo;
-      photoElement.alt = 'Food photo';
-      photoElement.addEventListener('click', function() {
-        enlargedImage.src = entry.photo;
-        imageModal.style.display = 'flex';
-      });
-
-      photoContainer.appendChild(photoElement);
-      entryElement.appendChild(photoContainer);
+    if (!groupedEntries[dayTimestamp]) {
+      groupedEntries[dayTimestamp] = {
+        dateDisplay: dateKey,
+        entries: []
+      };
     }
 
-    const btnGroup = document.createElement('div');
-    btnGroup.className = 'btn-group';
+    groupedEntries[dayTimestamp].entries.push(entry);
+  });
 
-    const editButton = document.createElement('button');
-    editButton.className = 'edit-btn';
-    editButton.textContent = 'Edit';
-    editButton.addEventListener('click', () => {
-      startEditing(index);
+  // Sort dates in descending order (newest first)
+  const sortedDates = Object.keys(groupedEntries).sort((a, b) => b - a);
+
+  // For each date group
+  sortedDates.forEach((dayTimestamp) => {
+    const dateGroup = groupedEntries[dayTimestamp];
+
+    // Create date header
+    const dateHeader = document.createElement('div');
+    dateHeader.className = 'date-header';
+    dateHeader.textContent = dateGroup.dateDisplay;
+    entriesContainer.appendChild(dateHeader);
+
+    // Sort entries within this date by time (chronologically)
+    dateGroup.entries.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+    // Add entries for this date
+    dateGroup.entries.forEach((entry, entryIdx) => {
+      // Find the original index in the full foodEntries array
+      const originalIndex = foodEntries.findIndex(e =>
+          e.description === entry.description &&
+          e.time === entry.time &&
+          e.mealType === entry.mealType
+      );
+
+      const entryElement = createEntryElement(entry, originalIndex);
+      entriesContainer.appendChild(entryElement);
+    });
+  });
+}
+
+// Create entry element
+function createEntryElement(entry, index) {
+  const entryElement = document.createElement('div');
+  entryElement.className = `entry ${entry.mealType || 'breakfast'}`;
+  entryElement.dataset.index = index;
+
+  const timeElement = document.createElement('div');
+  timeElement.className = 'entry-time';
+  const entryDate = new Date(entry.time);
+
+  const timeText = document.createElement('span');
+  timeText.textContent = entryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const mealTypeSpan = document.createElement('span');
+  mealTypeSpan.className = 'meal-type';
+  const mealTypeName = entry.mealType ? entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1) : 'Meal';
+  mealTypeSpan.textContent = mealTypeName;
+
+  timeElement.appendChild(timeText);
+  timeElement.appendChild(mealTypeSpan);
+
+  const contentElement = document.createElement('div');
+  contentElement.className = 'entry-content';
+  contentElement.textContent = entry.description;
+
+  entryElement.appendChild(timeElement);
+  entryElement.appendChild(contentElement);
+
+  if (entry.photo) {
+    const photoContainer = document.createElement('div');
+    photoContainer.className = 'photo-container';
+
+    const photoElement = document.createElement('img');
+    photoElement.className = 'entry-photo';
+    photoElement.src = entry.photo;
+    photoElement.alt = 'Food photo';
+    photoElement.addEventListener('click', function() {
+      enlargedImage.src = entry.photo;
+      imageModal.style.display = 'flex';
     });
 
-    btnGroup.appendChild(editButton);
-    entryElement.appendChild(btnGroup);
-    entriesContainer.appendChild(entryElement);
+    photoContainer.appendChild(photoElement);
+    entryElement.appendChild(photoContainer);
+  }
+
+  const btnGroup = document.createElement('div');
+  btnGroup.className = 'btn-group';
+
+  const editButton = document.createElement('button');
+  editButton.className = 'edit-btn';
+  editButton.textContent = 'Edit';
+  editButton.addEventListener('click', () => {
+    startEditing(index);
   });
+
+  btnGroup.appendChild(editButton);
+  entryElement.appendChild(btnGroup);
+
+  return entryElement;
 }
 
 // Start editing an entry
@@ -174,6 +283,9 @@ function startEditing(index) {
 
   // Show edit mode buttons
   editModeButtons.style.display = 'flex';
+
+  // Switch to add tab
+  setActiveTab('add-tab');
 
   // Scroll to form
   entryForm.scrollIntoView({ behavior: 'smooth' });
@@ -218,7 +330,7 @@ function cancelEditing() {
 function deleteEntry(index) {
   if (confirm('Are you sure you want to delete this entry?')) {
     foodEntries.splice(index, 1);
-    saveEntries(); 
+    saveEntries();
     renderEntries();
     cancelEditing();
   }
@@ -292,6 +404,8 @@ function updateEntry(entryData) {
   saveEntries();
   renderEntries();
   cancelEditing();
+  // After updating, switch to log tab to show changes
+  setActiveTab('log-tab');
 }
 
 function addEntryToList(entry) {
@@ -301,7 +415,7 @@ function addEntryToList(entry) {
   }
 
   foodEntries.push(entry);
-  saveEntries(); 
+  saveEntries();
   renderEntries();
 
   // Reset form
@@ -311,6 +425,9 @@ function addEntryToList(entry) {
   foodTime.value = now.toISOString().slice(0, 16);
   foodPhoto.value = '';
   photoPreview.innerHTML = '<span>No photo selected</span>';
+
+  // After adding, switch to log tab to show the new entry
+  setActiveTab('log-tab');
 }
 
 // Export data
@@ -338,11 +455,111 @@ exportBtn.addEventListener('click', function() {
   URL.revokeObjectURL(url);
 });
 
+// Import functionality
+importFile.addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const jsonData = JSON.parse(e.target.result);
+
+      // Validate the JSON structure
+      if (!jsonData.entries || !Array.isArray(jsonData.entries)) {
+        throw new Error('Invalid file format. Missing "entries" array.');
+      }
+
+      // Store the imported entries temporarily
+      importedEntries = jsonData.entries;
+
+      // Show the import modal
+      importModal.style.display = 'flex';
+    } catch (error) {
+      alert('Error reading file: ' + error.message);
+      importFile.value = '';
+    }
+  };
+
+  reader.readAsText(file);
+});
+
+// Merge entries button handler
+mergeEntriesBtn.addEventListener('click', function() {
+  if (!importedEntries) return;
+
+  // Keep track of how many new entries we're adding
+  let newEntriesCount = 0;
+
+  // Process each imported entry
+  importedEntries.forEach(importedEntry => {
+    // Check if this exact entry already exists (basic deduplication)
+    const isDuplicate = foodEntries.some(existingEntry =>
+        existingEntry.description === importedEntry.description &&
+        existingEntry.time === importedEntry.time &&
+        existingEntry.mealType === importedEntry.mealType
+    );
+
+    if (!isDuplicate) {
+      foodEntries.push(importedEntry);
+      newEntriesCount++;
+    }
+  });
+
+  // Save the updated entries
+  saveEntries();
+  renderEntries();
+
+  // Show feedback to the user
+  alert(`Import complete: Added ${newEntriesCount} new entries.`);
+
+  // Clean up
+  importedEntries = null;
+  importModal.style.display = 'none';
+  importFile.value = '';
+});
+
+// Replace entries button handler
+replaceEntriesBtn.addEventListener('click', function() {
+  if (!importedEntries) return;
+
+  if (confirm('This will replace all your current entries with the imported ones. Are you sure?')) {
+    // Replace all entries
+    foodEntries = importedEntries;
+
+    // Save the new entries
+    saveEntries();
+    renderEntries();
+
+    // Show feedback
+    alert(`Import complete: Replaced all entries with ${importedEntries.length} imported entries.`);
+
+    // Clean up
+    importedEntries = null;
+    importModal.style.display = 'none';
+    importFile.value = '';
+  }
+});
+
+// Cancel import button handler
+cancelImportBtn.addEventListener('click', function() {
+  importedEntries = null;
+  importModal.style.display = 'none';
+  importFile.value = '';
+});
+
+// Import modal close handler
+importModalClose.addEventListener('click', function() {
+  importedEntries = null;
+  importModal.style.display = 'none';
+  importFile.value = '';
+});
+
 // Clear all data
 clearBtn.addEventListener('click', function() {
   if (confirm('Are you sure you want to delete all entries? This cannot be undone.')) {
     foodEntries = [];
-    saveEntries(); 
+    saveEntries();
     renderEntries();
     cancelEditing();
   }
@@ -360,6 +577,15 @@ imageModal.addEventListener('click', function(event) {
   }
 });
 
+// Close import modal when clicking outside the content
+importModal.addEventListener('click', function(event) {
+  if (event.target === importModal) {
+    importedEntries = null;
+    importModal.style.display = 'none';
+    importFile.value = '';
+  }
+});
+
 // Hook up cancel and delete buttons
 cancelEditBtn.addEventListener('click', cancelEditing);
 deleteEntryBtn.addEventListener('click', function() {
@@ -368,5 +594,22 @@ deleteEntryBtn.addEventListener('click', function() {
   }
 });
 
-// Load immediately in case DOMContentLoaded already fired, also because DB needs to be set up
-document.addEventListener('DOMContentLoaded', loadEntries);
+// Initialize the app
+function initApp() {
+  // Initialize tab navigation
+  initTabs();
+
+  // Show the add tab by default
+  setActiveTab('add-tab');
+
+  // Load entries from database
+  loadEntries();
+}
+
+// Start the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', initApp);
+
+// Also initialize if already loaded (for immediate execution)
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  initApp();
+}
