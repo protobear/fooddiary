@@ -747,3 +747,32 @@ button:active {
 .entry.filtered {
   display: none;
 }
+
+/* Fix for tab bar issues */
+.tab-bar {
+  height: var(--tab-bar-height);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: 8px; /* Add some padding at the top */
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* Align items to the top */
+  padding-top: 8px; /* Add some padding at the top */
+  gap: 8px; /* Create space between icon and text */
+}
+
+.tab-item.active::after {
+  bottom: 12px; /* Position the indicator above the text */
+}
+
+.tab-item i {
+  margin-bottom: 2px; /* Reduce margin to prevent cutoff */
+}
+
+/* Fix body padding to accommodate tab bar */
+body {
+  padding-bottom: calc(var(--tab-bar-height) + 20px + env(safe-area-inset-bottom, 0px));
+}
