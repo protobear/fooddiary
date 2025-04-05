@@ -2,6 +2,8 @@
 let foodEntries = [];
 let editingIndex = -1;
 let importedEntries = null;
+let currentFilter = 'all';
+const filterButtons = document.querySelectorAll('.filter-btn');
 const foodDescription = document.getElementById('food-description');
 const mealType = document.getElementById('meal-type');
 const foodTime = document.getElementById('food-time');
@@ -195,6 +197,10 @@ function renderEntries() {
       entriesContainer.appendChild(entryElement);
     });
   });
+
+  if (currentFilter !== 'all') {
+    applyFilter();
+  }
 }
 
 // Create entry element
@@ -606,6 +612,9 @@ function initApp() {
   // Initialize tab navigation
   initTabs();
 
+  // Initialize filters
+  initFilters();
+
   // Show the add tab by default
   setActiveTab('add-tab');
 
@@ -614,6 +623,59 @@ function initApp() {
 
   // Add our new UI enhancements
   enhanceUIAnimations();
+}
+
+function initFilters() {
+  // Add event listeners to filter buttons
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const filter = button.getAttribute('data-filter');
+      currentFilter = filter;
+
+      // Update active button
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      // Apply filter
+      applyFilter();
+    });
+  });
+}
+
+
+// Function to apply the current filter
+function applyFilter() {
+  const entries = document.querySelectorAll('.entry');
+
+  entries.forEach(entry => {
+    if (currentFilter === 'all' || entry.classList.contains(currentFilter)) {
+      entry.classList.remove('filtered');
+    } else {
+      entry.classList.add('filtered');
+    }
+  });
+
+  // Check if we need to show the empty message
+  checkFilterResults();
+}
+
+// Function to check if there are visible entries after filtering
+function checkFilterResults() {
+  const visibleEntries = document.querySelectorAll('.entry:not(.filtered)');
+  const emptyMessage = document.getElementById('empty-message');
+
+  if (visibleEntries.length === 0 && foodEntries.length > 0) {
+    // We have entries but none match the filter
+    emptyMessage.textContent = `No ${currentFilter} entries found.`;
+    emptyMessage.style.display = 'block';
+  } else if (foodEntries.length === 0) {
+    // No entries at all
+    emptyMessage.textContent = 'No entries yet. Start adding your meals!';
+    emptyMessage.style.display = 'block';
+  } else {
+    // We have entries that match the filter
+    emptyMessage.style.display = 'none';
+  }
 }
 
 function enhanceUIAnimations() {

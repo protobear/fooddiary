@@ -12,7 +12,7 @@
   --lunch-color: rgba(48, 209, 88, 0.2);
   --dinner-color: rgba(255, 69, 58, 0.2);
   --snack-color: rgba(191, 90, 242, 0.2);
-  --tab-bar-height: 68px;
+  --tab-bar-height: 72px;
   --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
 }
 
@@ -49,7 +49,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px 20px calc(20px + var(--tab-bar-height));
+  padding: 20px 20px calc(20px + var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
   color: var(--text-color);
   line-height: 1.5;
   position: relative;
@@ -110,6 +110,9 @@ h2 {
   box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
   z-index: 100;
   border-top: 1px solid var(--glass-border);
+
+  /* Add padding for iOS home indicator */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .tab-item {
@@ -683,4 +686,64 @@ button:active {
 
 button:active {
   animation: clickEffect 0.3s ease forwards;
+}
+
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 5px;
+  background: var(--card-background);
+  border-radius: var(--border-radius);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+
+.filter-btn {
+  flex: 1;
+  min-width: 80px;
+  background: rgba(60, 60, 62, 0.3);
+  color: var(--text-color);
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: none;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.filter-btn:hover {
+  background: rgba(76, 76, 78, 0.5);
+  transform: translateY(-2px);
+}
+
+.filter-btn.active {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(58, 134, 255, 0.3);
+}
+
+.filter-btn[data-filter="breakfast"].active {
+  background: rgba(64, 156, 255, 0.8);
+}
+
+.filter-btn[data-filter="lunch"].active {
+  background: rgba(48, 209, 88, 0.8);
+}
+
+.filter-btn[data-filter="dinner"].active {
+  background: rgba(255, 69, 58, 0.8);
+}
+
+.filter-btn[data-filter="snack"].active {
+  background: rgba(191, 90, 242, 0.8);
+}
+
+/* Add this class to hide filtered entries */
+.entry.filtered {
+  display: none;
 }

@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <!-- PWA related meta tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#317EFB">
@@ -67,6 +66,13 @@
 
   <!-- Log Tab Content -->
   <div class="tab-content" id="log-tab">
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="breakfast">Breakfast</button>
+      <button class="filter-btn" data-filter="lunch">Lunch</button>
+      <button class="filter-btn" data-filter="dinner">Dinner</button>
+      <button class="filter-btn" data-filter="snack">Snack</button>
+    </div>
     <div class="entries" id="entries">
       <div class="empty-message" id="empty-message">No entries yet. Start adding your meals!</div>
       <div id="entries-container"></div>
