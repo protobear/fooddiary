@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Food Diary Viewer</title>
+  <style>
+    :root {
+      --background-color: #f5f5f7;
+      --card-background: #ffffff;
+      --text-color: #1d1d1f;
+      --secondary-text: #6e6e73;
+      --accent-color: #0071e3;
+      --border-radius: 12px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --breakfast-color: #e3f2fd;
+      --breakfast-border: #2196f3;
+      --lunch-color: #e8f5e9;
+      --lunch-border: #4caf50;
+      --dinner-color: #ffebee;
+      --dinner-border: #f44336;
+      --snack-color: #f3e5f5;
+      --snack-border: #9c27b0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    /* Header Styles */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-weight: 600;
+      font-size: 28px;
+      color: var(--text-color);
+    }
+
+    .file-selector {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      font-size: 100px;
+      opacity: 0;
+      right: 0;
+      top: 0;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .filter-btn {
+      background-color: #f5f5f7;
+      color: var(--text-color);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 8px 16px;
+    }
+
+    .filter-btn.active {
+      background-color: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    /* Main Content */
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .date-section {
+      margin-bottom: 30px;
+    }
+
+    .date-header {
+      background-color: var(--card-background);
+      padding: 15px 20px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .entries-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 15px;
+    }
+
+    .entry {
+      background-color: var(--card-background);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.2s ease;
+    }
+
+    .entry:hover {
+      transform: translateY(-3px);
+    }
+
+    .entry-header {
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .entry-time {
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    .meal-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .breakfast .meal-badge {
+      background-color: var(--breakfast-color);
+      color: var(--breakfast-border);
+    }
+
+    .lunch .meal-badge {
+      background-color: var(--lunch-color);
+      color: var(--lunch-border);
+    }
+
+    .dinner .meal-badge {
+      background-color: var(--dinner-color);
+      color: var(--dinner-border);
+    }
+
+    .snack .meal-badge {
+      background-color: var(--snack-color);
+      color: var(--snack-border);
+    }
+
+    .entry-content {
+      padding: 15px 20px;
+    }
+
+    .entry-description {
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    .entry-photo {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+
+    .entry-photo:hover {
+      opacity: 0.9;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 50px 0;
+      color: var(--secondary-text);
+      font-size: 16px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-content {
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    .modal-image {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 8px;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 40px;
+      cursor: pointer;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--accent-color);
+      animation: spin 1s ease-in-out infinite;
+      margin: 40px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-message {
+      text-align: center;
+      margin-top: 15px;
+      color: var(--secondary-text);
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #1a1a1a;
+        --card-background: #2c2c2e;
+        --text-color: #f5f5f7;
+        --secondary-text: #a1a1a6;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .filter-btn {
+        background-color: #2c2c2e;
+        border-color: #3a3a3c;
+      }
+    }
+
+    /* iPad Specific Optimizations */
+    @media (min-width: 768px) {
+      body {
+        padding: 30px;
+      }
+
+      .entries-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .date-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+      }
+    }
+
+    /* iPad Pro */
+    @media (min-width: 1024px) {
+      .entries-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* Hidden class for filtering */
+    .hidden {
+      display: none;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      color: var(--secondary-text);
+      font-size: 14px;
+      padding: 20px 0;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Food Diary Viewer</h1>
+  <div class="file-selector">
+    <div class="file-input-wrapper">
+      <button>Choose File</button>
+      <input type="file" id="file-input" accept=".json">
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All Meals</button>
+    <button class="filter-btn" data-filter="breakfast">Breakfast</button>
+    <button class="filter-btn" data-filter="lunch">Lunch</button>
+    <button class="filter-btn" data-filter="dinner">Dinner</button>
+    <button class="filter-btn" data-filter="snack">Snack</button>
+  </div>
+
+  <div id="loading" style="display: none;">
+    <div class="spinner"></div>
+    <div class="loading-message">Loading your food diary...</div>
+  </div>
+
+  <div id="initial-message" class="empty-message">
+    Please select your food diary JSON file to view your entries
+  </div>
+
+  <div id="content" class="content">
+    <!-- Entries will be populated here -->
+  </div>
+</main>
+
+<div id="image-modal" class="modal">
+  <span class="close-modal">&times;</span>
+  <div class="modal-content">
+    <img id="modal-image" class="modal-image" src="" alt="Food image">
+  </div>
+</div>
+
+<footer>
+  Food Diary Viewer - Medical Appointment Edition
+</footer>
+
+<script>
+  // DOM elements
+  const fileInput = document.getElementById('file-input');
+  const contentContainer = document.getElementById('content');
+  const loadingElement = document.getElementById('loading');
+  const initialMessage = document.getElementById('initial-message');
+  const imageModal = document.getElementById('image-modal');
+  const modalImage = document.getElementById('modal-image');
+  const closeModal = document.querySelector('.close-modal');
+  const filterButtons = document.querySelectorAll('.filter-btn');
+
+  // State variables
+  let foodEntries = [];
+  let currentFilter = 'all';
+
+  // Event listeners
+  fileInput.addEventListener('change', handleFileSelect);
+  closeModal.addEventListener('click', () => imageModal.style.display = 'none');
+  imageModal.addEventListener('click', (e) => {
+    if (e.target === imageModal) {
+      imageModal.style.display = 'none';
+    }
+  });
+
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Update active button
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      // Apply filter
+      currentFilter = button.getAttribute('data-filter');
+      applyFilter();
+    });
+  });
+
+  // Handle file selection
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Show loading spinner
+    initialMessage.style.display = 'none';
+    loadingElement.style.display = 'block';
+    contentContainer.innerHTML = '';
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      try {
+        const data = JSON.parse(event.target.result);
+
+        // Check if the data has the expected structure
+        if (!data.entries || !Array.isArray(data.entries)) {
+          throw new Error('Invalid food diary format');
+        }
+
+        foodEntries = data.entries;
+
+        // Hide loading spinner
+        loadingElement.style.display = 'none';
+
+        // Display entries
+        displayEntries(foodEntries);
+      } catch (error) {
+        loadingElement.style.display = 'none';
+        contentContainer.innerHTML = `
+            <div class="empty-message">
+              Error loading food diary: ${error.message}
+            </div>
+          `;
+      }
+    };
+
+    reader.readAsText(file);
+  }
+
+  // Format date for display
+  function formatDateForDisplay(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // Format time for display
+  function formatTimeForDisplay(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  // Get day start timestamp for grouping
+  function getDayStart(dateString) {
+    const date = new Date(dateString);
+    date.setHours(0, 0, 0, 0);
+    return date.getTime();
+  }
+
+  // Create an entry element
+  function createEntryElement(entry) {
+    const entryElement = document.createElement('div');
+    entryElement.className = `entry ${entry.mealType}`;
+
+    const mealTypeDisplay = entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1);
+
+    let entryHTML = `
+        <div class="entry-header">
+          <span class="entry-time">${formatTimeForDisplay(entry.time)}</span>
+          <span class="meal-badge">${mealTypeDisplay}</span>
+        </div>
+        <div class="entry-content">
+          <p class="entry-description">${entry.description}</p>
+      `;
+
+    if (entry.photo) {
+      entryHTML += `<img class="entry-photo" src="${entry.photo}" alt="Food photo">`;
+    }
+
+    entryHTML += `</div>`;
+
+    entryElement.innerHTML = entryHTML;
+
+    // Add click event to photo if present
+    if (entry.photo) {
+      const photoElement = entryElement.querySelector('.entry-photo');
+      photoElement.addEventListener('click', () => {
+        modalImage.src = entry.photo;
+        imageModal.style.display = 'flex';
+      });
+    }
+
+    return entryElement;
+  }
+
+  // Display all entries
+  function displayEntries(entries) {
+    contentContainer.innerHTML = '';
+
+    if (!entries || entries.length === 0) {
+      contentContainer.innerHTML = `
+          <div class="empty-message">
+            No entries found in your food diary
+          </div>
+        `;
+      return;
+    }
+
+    // Sort entries by time (newest first)
+    entries.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    // Group entries by date
+    const groupedEntries = {};
+
+    entries.forEach(entry => {
+      const dayTimestamp = getDayStart(entry.time);
+
+      if (!groupedEntries[dayTimestamp]) {
+        groupedEntries[dayTimestamp] = {
+          dateDisplay: formatDateForDisplay(entry.time),
+          entries: []
+        };
+      }
+
+      groupedEntries[dayTimestamp].entries.push(entry);
+    });
+
+    // Sort dates in descending order (newest first)
+    const sortedDates = Object.keys(groupedEntries).sort((a, b) => b - a);
+
+    // Create and append date sections
+    sortedDates.forEach(dayTimestamp => {
+      const dateGroup = groupedEntries[dayTimestamp];
+
+      // Create date section
+      const dateSection = document.createElement('div');
+      dateSection.className = 'date-section';
+
+      // Create date header
+      const dateHeader = document.createElement('div');
+      dateHeader.className = 'date-header';
+      dateHeader.textContent = dateGroup.dateDisplay;
+
+      // Create entries grid
+      const entriesGrid = document.createElement('div');
+      entriesGrid.className = 'entries-grid';
+
+      // Sort entries within each date by time (chronologically)
+      dateGroup.entries.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+      // Add entries to the grid
+      dateGroup.entries.forEach(entry => {
+        const entryElement = createEntryElement(entry);
+        entriesGrid.appendChild(entryElement);
+      });
+
+      // Append elements to the date section
+      dateSection.appendChild(dateHeader);
+      dateSection.appendChild(entriesGrid);
+
+      // Append date section to content container
+      contentContainer.appendChild(dateSection);
+    });
+
+    // Apply current filter
+    applyFilter();
+  }
+
+  // Apply filter to entries
+  function applyFilter() {
+    const entries = document.querySelectorAll('.entry');
+    const dateSections = document.querySelectorAll('.date-section');
+
+    entries.forEach(entry => {
+      if (currentFilter === 'all' || entry.classList.contains(currentFilter)) {
+        entry.classList.remove('hidden');
+      } else {
+        entry.classList.add('hidden');
+      }
+    });
+
+    // Hide date sections with no visible entries
+    dateSections.forEach(section => {
+      const visibleEntries = section.querySelectorAll('.entry:not(.hidden)');
+      if (visibleEntries.length === 0) {
+        section.classList.add('hidden');
+      } else {
+        section.classList.remove('hidden');
+      }
+    });
+
+    // Show message if no entries match the filter
+    const visibleSections = document.querySelectorAll('.date-section:not(.hidden)');
+    if (visibleSections.length === 0 && foodEntries.length > 0) {
+      contentContainer.innerHTML = `
+          <div class="empty-message">
+            No ${currentFilter === 'all' ? '' : currentFilter} entries found
+          </div>
+        `;
+    }
+  }
+</script>
+</body>
+</html>
