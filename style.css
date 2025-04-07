@@ -133,17 +133,7 @@ h2 {
   color: var(--accent-color);
 }
 
-.tab-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 3px;
-  background-color: var(--accent-color);
-  border-radius: 3px 3px 0 0;
-}
+
 
 .tab-item i {
   font-size: 24px;
@@ -764,9 +754,7 @@ button:active {
   gap: 8px; /* Create space between icon and text */
 }
 
-.tab-item.active::after {
-  bottom: 2px; /* Position the indicator above the text */
-}
+
 
 .tab-item i {
   margin-bottom: 5px; /* Reduce margin to prevent cutoff */
