@@ -12,7 +12,7 @@
   --lunch-color: rgba(48, 209, 88, 0.2);
   --dinner-color: rgba(255, 69, 58, 0.2);
   --snack-color: rgba(191, 90, 242, 0.2);
-  --tab-bar-height: 72px;
+  --tab-bar-height: 80px;
   --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
 }
 
@@ -765,7 +765,7 @@ button:active {
 }
 
 .tab-item.active::after {
-  bottom: 12px; /* Position the indicator above the text */
+  bottom: 2px; /* Position the indicator above the text */
 }
 
 .tab-item i {
