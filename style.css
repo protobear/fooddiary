@@ -769,10 +769,10 @@ button:active {
 }
 
 .tab-item i {
-  margin-bottom: 2px; /* Reduce margin to prevent cutoff */
+  margin-bottom: 5px; /* Reduce margin to prevent cutoff */
 }
 
 /* Fix body padding to accommodate tab bar */
 body {
-  padding-bottom: calc(var(--tab-bar-height) + 20px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--tab-bar-height) + 50px + env(safe-area-inset-bottom, 0px));
 }
